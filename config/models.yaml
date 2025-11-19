@@ -1,0 +1,42 @@
+models:
+  # Modelos gratuitos disponíveis no OpenRouter
+  # NOTA: Execute 'python test_openrouter.py' para listar modelos disponíveis
+  # e verificar os nomes corretos
+  
+  # Modelos de código e programação
+  - name: "kwaipilot/kat-coder-pro:free"
+    max_tokens: 2048
+    # Nome: Kwaipilot: KAT-Coder-Pro V1 (free)
+  
+  - name: "qwen/qwen3-coder:free"
+    max_tokens: 2048
+    # Nome: Qwen: Qwen3 Coder 480B A35B (free)
+  
+  # Modelos gerais
+  - name: "nvidia/nemotron-nano-12b-v2-vl:free"
+    max_tokens: 2048
+    # Nome: NVIDIA: Nemotron Nano 12B 2 VL (free)
+  
+  - name: "alibaba/tongyi-deepresearch-30b-a3b:free"
+    max_tokens: 2048
+    # Nome: Tongyi DeepResearch 30B A3B (free)
+  
+  - name: "openai/gpt-oss-20b:free"
+    max_tokens: 2048
+    # Nome: OpenAI: gpt-oss-20b (free)
+  
+  - name: "z-ai/glm-4.5-air:free"
+    max_tokens: 2048
+    # Nome: Z.AI: GLM 4.5 Air (free)
+  
+  - name: "moonshotai/kimi-k2:free"
+    max_tokens: 2048
+    # Nome: MoonshotAI: Kimi K2 0711 (free)
+  
+  - name: "deepseek/deepseek-r1-0528:free"
+    max_tokens: 2048
+    # Nome: DeepSeek: R1 0528 (free)
+  
+  - name: "google/gemma-3n-e4b-it:free"
+    max_tokens: 2048
+    # Nome: Google: Gemma 3n 4B (free)

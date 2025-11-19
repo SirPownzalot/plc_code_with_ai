@@ -1,0 +1,8 @@
+{
+  "prompt": "Você deve gerar código Structured Text (ST) compatível com o OpenPLC. Use endereços IEC (%IX, %QX). Tarefa: acender %QX0.0 quando %IX0.0 e %IX0.1 forem verdadeiros. Não use bibliotecas externas. Escreva apenas o programa ST completo.",
+  "tests": [
+    { "inputs": {"0":false, "1":false}, "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs": {"0":true, "1":false},  "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs": {"0":true, "1":true},   "expected_outputs":{"0":true},  "wait":0.1 }
+  ]
+}

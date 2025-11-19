@@ -1,0 +1,7 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC. Calcular média de duas entradas analógicas %IW0 e %IW1 e ativar %QX0.0 caso a média > 2000.",
+  "tests": [
+    { "inputs":{"A0":1000,"A1":1000}, "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs":{"A0":3000,"A1":3000}, "expected_outputs":{"0":true},  "wait":0.1 }
+  ]
+}

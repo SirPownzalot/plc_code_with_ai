@@ -1,0 +1,9 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC. Endereços: entrada de liga %IX0.0, entrada de desliga %IX0.1, saída %QX0.0. Implementar lógica de selo (latch) SET/RESET.",
+  "tests": [
+    { "inputs":{"0":false,"1":false}, "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs":{"0":true,"1":false},  "expected_outputs":{"0":true},  "wait":0.1 },
+    { "inputs":{"0":false,"1":false}, "expected_outputs":{"0":true},  "wait":0.1 },
+    { "inputs":{"0":false,"1":true},  "expected_outputs":{"0":false}, "wait":0.1 }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC. Criar 4 etapas: E1, E2, E3, E4. Avanço ocorre por %IX0.0, %IX0.1, %IX0.2, %IX0.3 nesta ordem. Acender %QX0.0, %QX0.1, %QX0.2, %QX0.3 respectivamente.",
+  "tests": [
+    { "inputs":{"0":true},  "expected_outputs":{"0":true,"1":false,"2":false,"3":false}, "wait":0.1 },
+    { "inputs":{"1":true},  "expected_outputs":{"0":false,"1":true,"2":false,"3":false}, "wait":0.1 }
+  ]
+}

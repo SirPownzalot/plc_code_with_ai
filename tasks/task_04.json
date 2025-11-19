@@ -1,0 +1,9 @@
+{
+  "prompt": "Gerar código ST para OpenPLC implementando TOF de 1 segundo. Entrada: %IX0.0, saída: %QX0.0.",
+  "tests": [
+    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs":{"0":true},  "expected_outputs":{"0":true},  "wait":0.1 },
+    { "inputs":{"0":false}, "expected_outputs":{"0":true},  "wait":0.5 },
+    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":1.2 }
+  ]
+}

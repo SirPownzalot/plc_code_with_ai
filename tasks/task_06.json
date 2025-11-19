@@ -1,0 +1,8 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC. Implementar máquina de estados: IDLE, RUN, FAULT. Entradas: start=%IX0.0, stop=%IX0.1, fault=%IX0.2. Saída RUN=%QX0.0.",
+  "tests": [
+    { "inputs":{"0":false,"1":false,"2":false}, "expected_outputs":{"0":false}, "wait":0.1 },
+    { "inputs":{"0":true,"1":false,"2":false},  "expected_outputs":{"0":true},  "wait":0.1 },
+    { "inputs":{"0":false,"1":true,"2":false},  "expected_outputs":{"0":false}, "wait":0.1 }
+  ]
+}

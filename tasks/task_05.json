@@ -1,0 +1,10 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC usando bloco CTU. Cada pulso em %IX0.0 incrementa o contador. Quando atingir 10, ligar %QX0.0.",
+  "tests": [
+    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 },
+    { "inputs":{"0":true},  "expected_outputs":{"0":false}, "wait":0.05 },
+    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 },
+    { "inputs":{"0":true},  "expected_outputs":{"0":false}, "wait":0.05 },
+    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 }
+  ]
+}

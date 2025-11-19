@@ -1,0 +1,6 @@
+{
+  "prompt": "Gerar ST compatível com OpenPLC. Declarar array de 10 INT e somar todos os elementos usando FOR. Se soma > 1000, ligar %QX0.0.",
+  "tests": [
+    { "inputs":{}, "expected_outputs":{"0":false}, "wait":0.1 }
+  ]
+}
