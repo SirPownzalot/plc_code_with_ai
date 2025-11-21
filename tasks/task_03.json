@@ -1,8 +1,8 @@
 {
-  "prompt": "Gerar ST compatível com OpenPLC. Implementar TON de 2 segundos. Entrada = %IX0.0, saída = %QX0.0. Use bloco TON da IEC 61131-3.",
+  "prompt": "Gerar código ST compatível com OpenPLC usando apenas variáveis locais. Implementar temporizador TON (Timer On Delay) de 2 segundos usando o bloco TON da IEC 61131-3. Use variáveis locais: 'input' (entrada do temporizador) e 'output' (saída do temporizador). O temporizador deve ter tempo de 2 segundos (PT := T#2S).",
   "tests": [
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.1 },
-    { "inputs":{"0":true},  "expected_outputs":{"0":false}, "wait":1.0 },
-    { "inputs":{"0":true},  "expected_outputs":{"0":true},  "wait":2.2 }
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":0.1 },
+    { "inputs":{"input":true},  "expected_outputs":{"output":false}, "wait":1.0 },
+    { "inputs":{"input":true},  "expected_outputs":{"output":true},  "wait":2.2 }
   ]
 }

@@ -2,6 +2,7 @@
 Script de teste para verificar conexão com OpenRouter e listar modelos disponíveis
 """
 import os
+import yaml
 import requests
 from dotenv import load_dotenv
 
@@ -54,53 +55,82 @@ try:
 except Exception as e:
     print(f"[ERRO] Erro ao listar modelos: {e}")
 
-# Teste 2: Testar um modelo específico
-print("\n[TESTE 2] Testando chamada de API com modelo de exemplo...")
+# Teste 2: Testar modelos do config/models.yaml
+print("\n[TESTE 2] Testando modelos configurados em config/models.yaml...")
 
-test_models = [
-    "meta-llama/llama-3.1-8b-instruct:free",
-    "google/gemini-flash-1.5:free",
-    "meta-llama/llama-3.1-8b-instruct",
-    "google/gemini-flash-1.5",
-    "openrouter/auto"  # Modelo automático
-]
+# Lê os modelos do arquivo de configuração
+try:
+    import yaml
+    with open("config/models.yaml", "r", encoding='utf-8') as f:
+        config = yaml.safe_load(f)
+        test_models = [model["name"] for model in config.get("models", [])]
+    
+    if not test_models:
+        print("  [AVISO] Nenhum modelo encontrado em config/models.yaml")
+        test_models = []
+except Exception as e:
+    print(f"  [ERRO] Falha ao ler config/models.yaml: {e}")
+    test_models = []
 
-for model_name in test_models:
-    print(f"\n  Testando: {model_name}")
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/PLC_Ai_Code",
-            "X-Title": "PLC Benchmark"
-        }
-        
-        body = {
-            "model": model_name,
-            "messages": [{"role": "user", "content": "Hello"}],
-            "max_tokens": 10
-        }
-        
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            json=body,
-            headers=headers,
-            timeout=30
-        )
-        
-        if response.status_code == 200:
-            print(f"    [OK] Modelo '{model_name}' funciona!")
-            data = response.json()
-            if "choices" in data and len(data["choices"]) > 0:
-                content = data["choices"][0]["message"]["content"]
-                print(f"    Resposta: {content[:50]}...")
-        else:
-            error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
-            error_msg = error_data.get("error", {}).get("message", response.text)
-            print(f"    [ERRO] {response.status_code}: {error_msg}")
+if test_models:
+    working_models = []
+    failed_models = []
+    
+    for model_name in test_models:
+        print(f"\n  Testando: {model_name}")
+        try:
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/PLC_Ai_Code",
+                "X-Title": "PLC Benchmark"
+            }
             
-    except Exception as e:
-        print(f"    [ERRO] {e}")
+            body = {
+                "model": model_name,
+                "messages": [{"role": "user", "content": "Hello"}],
+                "max_tokens": 10
+            }
+            
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=body,
+                headers=headers,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                print(f"    [OK] Modelo '{model_name}' funciona!")
+                data = response.json()
+                if "choices" in data and len(data["choices"]) > 0:
+                    content = data["choices"][0]["message"]["content"]
+                    print(f"    Resposta: {content[:50]}...")
+                working_models.append(model_name)
+            else:
+                error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+                error_msg = error_data.get("error", {}).get("message", response.text)
+                print(f"    [ERRO] {response.status_code}: {error_msg}")
+                failed_models.append((model_name, response.status_code, error_msg))
+                
+        except Exception as e:
+            print(f"    [ERRO] {e}")
+            failed_models.append((model_name, "EXCEPTION", str(e)))
+    
+    # Resumo
+    print("\n" + "=" * 80)
+    print("RESUMO DOS TESTES")
+    print("=" * 80)
+    print(f"\nModelos funcionando: {len(working_models)}")
+    for model in working_models:
+        print(f"  ✓ {model}")
+    
+    if failed_models:
+        print(f"\nModelos com problemas: {len(failed_models)}")
+        for model, code, msg in failed_models:
+            print(f"  ✗ {model} ({code}): {msg[:60]}")
+        print("\n⚠ ATENÇÃO: Remova os modelos com problemas do config/models.yaml")
+else:
+    print("  [AVISO] Nenhum modelo para testar")
 
 print("\n[INFO] Teste concluído!")
 

@@ -1,10 +1,10 @@
 {
-  "prompt": "Gerar ST compatível com OpenPLC usando bloco CTU. Cada pulso em %IX0.0 incrementa o contador. Quando atingir 10, ligar %QX0.0.",
+  "prompt": "Gerar código ST compatível com OpenPLC usando apenas variáveis locais. Implementar contador CTU (Counter Up) da IEC 61131-3. Cada pulso na variável local 'input' deve incrementar o contador. Quando o contador atingir 10, a variável local 'output' deve ser TRUE. Use variáveis locais para o contador e suas configurações.",
   "tests": [
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 },
-    { "inputs":{"0":true},  "expected_outputs":{"0":false}, "wait":0.05 },
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 },
-    { "inputs":{"0":true},  "expected_outputs":{"0":false}, "wait":0.05 },
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.05 }
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":0.05 },
+    { "inputs":{"input":true},  "expected_outputs":{"output":false}, "wait":0.05 },
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":0.05 },
+    { "inputs":{"input":true},  "expected_outputs":{"output":false}, "wait":0.05 },
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":0.05 }
   ]
 }

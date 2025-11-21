@@ -143,22 +143,29 @@ class OpenRouterClient:
                 
                 outputs[name] = result
 
-                out_path = Path(save_dir) / f"{name.replace('/', '_')}.st"
+                # Sanitiza o nome do arquivo removendo caracteres inválidos para Windows
+                safe_name = name.replace('/', '_').replace(':', '_').replace('\\', '_')
+                out_path = Path(save_dir) / f"{safe_name}.st"
                 out_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 # Debug: mostra caminho do arquivo
                 print(f"[DEBUG] Salvando em: {out_path}")
                 
                 try:
+                    # Debug: mostra o que será escrito (primeiros 200 caracteres)
+                    print(f"[DEBUG] Conteúdo a ser salvo (primeiros 200 chars): {repr(result[:200])}")
+                    
                     with open(out_path, "w", encoding='utf-8') as f:
-                        bytes_written = f.write(result)
+                        chars_written = f.write(result)
                         f.flush()  # Força escrita imediata
                         os.fsync(f.fileno())  # Garante que foi escrito no disco
                     
-                    print(f"[DEBUG] {bytes_written} bytes escritos no arquivo")
+                    print(f"[DEBUG] {chars_written} caracteres escritos no arquivo")
                     
                 except Exception as write_error:
                     print(f"[ERRO] Falha ao escrever arquivo: {write_error}")
+                    import traceback
+                    traceback.print_exc()
                     raise
                 
                 # Verifica se o arquivo foi escrito corretamente
@@ -168,10 +175,20 @@ class OpenRouterClient:
                 
                 file_size = out_path.stat().st_size
                 if file_size > 0:
+                    # Lê o arquivo para verificar o conteúdo
+                    saved_content = out_path.read_text(encoding='utf-8')
+                    print(f"[DEBUG] Arquivo salvo com sucesso. Tamanho: {file_size} bytes, Conteúdo (primeiros 200 chars): {repr(saved_content[:200])}")
                     print(f"[OK] Modelo {name} concluído ({file_size} bytes salvos em {out_path.name})")
                 else:
                     print(f"[ERRO] Arquivo criado mas está vazio: {out_path}")
-                    print(f"[DEBUG] Tentando ler arquivo: {out_path.read_text(encoding='utf-8')[:200]}")
+                    print(f"[DEBUG] Caminho absoluto: {out_path.absolute()}")
+                    print(f"[DEBUG] Conteúdo original tinha {len(result)} caracteres")
+                    # Tenta ler o arquivo mesmo vazio
+                    try:
+                        content = out_path.read_text(encoding='utf-8')
+                        print(f"[DEBUG] Conteúdo lido do arquivo: {repr(content[:200])}")
+                    except Exception as e:
+                        print(f"[DEBUG] Erro ao ler arquivo: {e}")
                     
             except Exception as e:
                 print(f"[ERRO] Falha ao processar modelo {name}: {e}")

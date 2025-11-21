@@ -1,8 +1,8 @@
 {
-  "prompt": "Você deve gerar código Structured Text (ST) compatível com o OpenPLC. Use endereços IEC (%IX, %QX). Tarefa: acender %QX0.0 quando %IX0.0 e %IX0.1 forem verdadeiros. Não use bibliotecas externas. Escreva apenas o programa ST completo.",
+  "prompt": "Você deve gerar código Structured Text (ST) compatível com o OpenPLC. Use apenas variáveis locais (VAR ... END_VAR). Tarefa: implementar uma função que retorna TRUE quando duas variáveis booleanas locais (input1 e input2) forem ambas verdadeiras. A função deve armazenar o resultado em uma variável local chamada 'output'. Não use bibliotecas externas. Escreva apenas o programa ST completo com declaração de variáveis.",
   "tests": [
-    { "inputs": {"0":false, "1":false}, "expected_outputs":{"0":false}, "wait":0.1 },
-    { "inputs": {"0":true, "1":false},  "expected_outputs":{"0":false}, "wait":0.1 },
-    { "inputs": {"0":true, "1":true},   "expected_outputs":{"0":true},  "wait":0.1 }
+    { "inputs": {"input1":false, "input2":false}, "expected_outputs":{"output":false}, "wait":0.1 },
+    { "inputs": {"input1":true, "input2":false},  "expected_outputs":{"output":false}, "wait":0.1 },
+    { "inputs": {"input1":true, "input2":true},   "expected_outputs":{"output":true},  "wait":0.1 }
   ]
 }

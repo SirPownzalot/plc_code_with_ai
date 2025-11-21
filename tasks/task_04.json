@@ -1,9 +1,9 @@
 {
-  "prompt": "Gerar código ST para OpenPLC implementando TOF de 1 segundo. Entrada: %IX0.0, saída: %QX0.0.",
+  "prompt": "Gerar código ST compatível com OpenPLC usando apenas variáveis locais. Implementar temporizador TOF (Timer Off Delay) de 1 segundo usando o bloco TOF da IEC 61131-3. Use variáveis locais: 'input' (entrada do temporizador) e 'output' (saída do temporizador). O temporizador deve ter tempo de 1 segundo (PT := T#1S).",
   "tests": [
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":0.1 },
-    { "inputs":{"0":true},  "expected_outputs":{"0":true},  "wait":0.1 },
-    { "inputs":{"0":false}, "expected_outputs":{"0":true},  "wait":0.5 },
-    { "inputs":{"0":false}, "expected_outputs":{"0":false}, "wait":1.2 }
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":0.1 },
+    { "inputs":{"input":true},  "expected_outputs":{"output":true},  "wait":0.1 },
+    { "inputs":{"input":false}, "expected_outputs":{"output":true},  "wait":0.5 },
+    { "inputs":{"input":false}, "expected_outputs":{"output":false}, "wait":1.2 }
   ]
 }

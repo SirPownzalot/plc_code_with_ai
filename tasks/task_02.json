@@ -1,9 +1,9 @@
 {
-  "prompt": "Gerar ST compatível com OpenPLC. Endereços: entrada de liga %IX0.0, entrada de desliga %IX0.1, saída %QX0.0. Implementar lógica de selo (latch) SET/RESET.",
+  "prompt": "Gerar código ST compatível com OpenPLC usando apenas variáveis locais. Implementar lógica de selo (latch) SET/RESET. Use variáveis locais: 'set_input' (entrada de liga), 'reset_input' (entrada de desliga) e 'output' (saída que mantém estado). A saída deve ser SET quando set_input for TRUE e RESET quando reset_input for TRUE.",
   "tests": [
-    { "inputs":{"0":false,"1":false}, "expected_outputs":{"0":false}, "wait":0.1 },
-    { "inputs":{"0":true,"1":false},  "expected_outputs":{"0":true},  "wait":0.1 },
-    { "inputs":{"0":false,"1":false}, "expected_outputs":{"0":true},  "wait":0.1 },
-    { "inputs":{"0":false,"1":true},  "expected_outputs":{"0":false}, "wait":0.1 }
+    { "inputs":{"set_input":false,"reset_input":false}, "expected_outputs":{"output":false}, "wait":0.1 },
+    { "inputs":{"set_input":true,"reset_input":false},  "expected_outputs":{"output":true},  "wait":0.1 },
+    { "inputs":{"set_input":false,"reset_input":false}, "expected_outputs":{"output":true},  "wait":0.1 },
+    { "inputs":{"set_input":false,"reset_input":true},  "expected_outputs":{"output":false}, "wait":0.1 }
   ]
 }

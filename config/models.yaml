@@ -1,42 +1,52 @@
+# Configuração de Modelos para Benchmark
+# 
+# Estratégia: Gerar códigos ST com IAs e disponibilizar para avaliação manual
+# - 5 IAs configuradas
+# - 5 tarefas por IA (task_01 a task_05)
+# - Critério de avaliação: Compila e Executa Corretamente (avaliação manual)
+
 models:
-  # Modelos gratuitos disponíveis no OpenRouter
-  # NOTA: Execute 'python test_openrouter.py' para listar modelos disponíveis
-  # e verificar os nomes corretos
+  # 5 IAs selecionadas para o benchmark
+  # 2 testadas e funcionando + 3 escolhidas da lista de modelos gratuitos disponíveis
+  # Cada IA será testada com 5 tarefas
+  # Critério de avaliação: Compila e Executa Corretamente (avaliação manual)
   
-  # Modelos de código e programação
   - name: "kwaipilot/kat-coder-pro:free"
     max_tokens: 2048
     # Nome: Kwaipilot: KAT-Coder-Pro V1 (free)
-  
-  - name: "qwen/qwen3-coder:free"
-    max_tokens: 2048
-    # Nome: Qwen: Qwen3 Coder 480B A35B (free)
-  
-  # Modelos gerais
-  - name: "nvidia/nemotron-nano-12b-v2-vl:free"
-    max_tokens: 2048
-    # Nome: NVIDIA: Nemotron Nano 12B 2 VL (free)
-  
-  - name: "alibaba/tongyi-deepresearch-30b-a3b:free"
-    max_tokens: 2048
-    # Nome: Tongyi DeepResearch 30B A3B (free)
-  
-  - name: "openai/gpt-oss-20b:free"
-    max_tokens: 2048
-    # Nome: OpenAI: gpt-oss-20b (free)
-  
-  - name: "z-ai/glm-4.5-air:free"
-    max_tokens: 2048
-    # Nome: Z.AI: GLM 4.5 Air (free)
-  
-  - name: "moonshotai/kimi-k2:free"
-    max_tokens: 2048
-    # Nome: MoonshotAI: Kimi K2 0711 (free)
-  
-  - name: "deepseek/deepseek-r1-0528:free"
-    max_tokens: 2048
-    # Nome: DeepSeek: R1 0528 (free)
+    # Status: ✓ Testado e funcionando
   
   - name: "google/gemma-3n-e4b-it:free"
     max_tokens: 2048
     # Nome: Google: Gemma 3n 4B (free)
+    # Status: ✓ Testado e funcionando
+  
+  - name: "nvidia/nemotron-nano-12b-v2-vl:free"
+    max_tokens: 2048
+    # Nome: NVIDIA: Nemotron Nano 12B 2 VL (free)
+    # Status: Disponível na lista de modelos gratuitos
+  
+  - name: "openai/gpt-oss-20b:free"
+    max_tokens: 2048
+    # Nome: OpenAI: gpt-oss-20b (free)
+    # Status: Disponível na lista de modelos gratuitos
+  
+  - name: "z-ai/glm-4.5-air:free"
+    max_tokens: 2048
+    # Nome: Z.AI: GLM 4.5 Air (free)
+    # Status: Disponível na lista de modelos gratuitos
+  
+  # Modelos adicionais gratuitos disponíveis (não testados ainda)
+  # Descomente para adicionar mais modelos:
+  # - name: "x-ai/grok-4.1-fast:free"
+  #   max_tokens: 2048
+  # - name: "meituan/longcat-flash-chat:free"
+  #   max_tokens: 2048
+  # - name: "nvidia/nemotron-nano-9b-v2:free"
+  #   max_tokens: 2048
+  # - name: "google/gemma-3n-e2b-it:free"
+  #   max_tokens: 2048
+  # - name: "qwen/qwen3-4b:free"
+  #   max_tokens: 2048
+  # - name: "qwen/qwen3-30b-a3b:free"
+  #   max_tokens: 2048

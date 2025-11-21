@@ -7,7 +7,7 @@ Este projeto executa o pipeline completo:
 1. Lê uma bateria de tarefas em NL (descrições de funções típicas de CLP).
 2. Envia cada tarefa para múltiplos modelos configurados no OpenRouter.
 3. Armazena localmente cada código ST retornado.
-4. Compila e executa cada código no **OpenPLC Runtime**, controlando via **Modbus/TCP**.
+4. Compila e executa cada código no **OpenPLC** (webserver na porta 8080), controlando via **Modbus/TCP** (porta 502).
 5. Avalia automaticamente cada implementação com base nos testes definidos.
 6. Gera relatórios de performance e correção para cada modelo.
 
@@ -16,7 +16,7 @@ Este projeto executa o pipeline completo:
 ## 📦 Requisitos
 
 - Python 3.10+
-- OpenPLC instalado localmente (Runtime + Compiler)
+- OpenPLC instalado localmente (Webserver rodando na porta 8080 + Compilador)
 - Modbus/TCP ativo (porta 502)
 - Conta no OpenRouter com API Key
 
@@ -259,18 +259,19 @@ Se o OpenPLC não for detectado automaticamente:
    ```
 
 3. **Usar componentes de instalações diferentes:**
-   Se você tem o Runtime em um local e o Compilador em outro (comum no Windows):
+   Se você tem o webserver em um local e o Compilador em outro (comum no Windows):
    ```bash
    python benchmark.py \
-     --openplc-path "C:/OpenPLC_Runtime" \
-     --compiler-path "C:/OpenPLC_v3/webserver/iec2c.exe" \
-     --runtime-path "C:/OpenPLC_Runtime/OpenPLC_Runtime.exe"
+     --openplc-path "C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3" \
+     --compiler-path "C:/OpenPLC_v3/webserver/core/matiec/iec2c.exe"
    ```
+   
+   **NOTA**: Não é necessário especificar `--runtime-path` se o webserver já está rodando (porta 8080).
    
    Ou usando o compilador do Editor:
    ```bash
    python benchmark.py \
-     --openplc-path "C:/OpenPLC_Runtime" \
+     --openplc-path "C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3" \
      --compiler-path "C:/Users/Matheus/OpenPLC_Editor/matiec/iec2c.exe"
    ```
 
@@ -331,9 +332,11 @@ O benchmark precisa do compilador para converter código ST em código executáv
    ```
 
 ### Erro: "Não foi possível conectar ao OpenPLC via Modbus/TCP"
-- Verifique se o OpenPLC Runtime está rodando
+- Verifique se o OpenPLC webserver está rodando (porta 8080)
+- Verifique se o Modbus/TCP está ativo (porta 502)
 - Confirme que a porta 502 está disponível
 - Verifique se não há firewall bloqueando a conexão
+- **NOTA**: O OpenPLC moderno roda como webserver, não como executável separado
 
 ### Erro de compilação do código ST
 - Verifique os logs de erro do compilador

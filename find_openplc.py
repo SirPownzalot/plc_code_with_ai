@@ -14,7 +14,13 @@ def find_openplc_components():
     
     # Caminhos possíveis
     if platform.system() == "Windows":
+        # Obter username do sistema
+        username = os.environ.get("USERNAME", "Matheus")
+        
         search_paths = [
+            # Webserver rodando (estrutura específica)
+            Path(f"C:/OpenPLC_Runtime/home/{username}/OpenPLC_v3"),
+            Path("C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3"),  # Caminho específico mencionado
             Path("C:/OpenPLC_Runtime"),  # Instalação comum do Runtime
             Path("C:/OpenPLC_Editor"),  # Instalação comum do Editor
             Path("C:/OpenPLC"),

@@ -20,10 +20,11 @@ class OpenPLCRunner:
             openplc_path: Caminho base para instalação do OpenPLC. 
                          Se None, tenta detectar automaticamente.
             compiler_path: Caminho direto para o compilador (opcional, sobrescreve detecção)
-            runtime_path: Caminho direto para o runtime (opcional, sobrescreve detecção)
+            runtime_path: Caminho direto para o webserver.py (opcional, sobrescreve detecção)
+                         NOTA: O OpenPLC moderno usa webserver.py como runtime, não executável
         """
         self.compiler_path_override = Path(compiler_path) if compiler_path else None
-        self.runtime_path_override = Path(runtime_path) if runtime_path else None
+        self.webserver_script_override = Path(runtime_path) if runtime_path else None
         
         if openplc_path:
             self.openplc_path = Path(openplc_path)
@@ -38,6 +39,8 @@ class OpenPLCRunner:
                 # Caminhos comuns no Windows
                 possible_paths = [
                     Path(os.environ.get("OPENPLC_PATH", "")),
+                    Path("C:/OpenPLC_Runtime/home") / os.environ.get("USERNAME", "Matheus") / "OpenPLC_v3",  # Webserver rodando
+                    Path("C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3"),  # Caminho específico mencionado
                     Path("C:/OpenPLC_Runtime"),  # Instalação comum do Runtime
                     Path("C:/OpenPLC"),
                     Path("C:/OpenPLC_v3"),
@@ -135,7 +138,14 @@ class OpenPLCRunner:
         
         # Procurar em diretórios adjacentes e locais comuns do Windows
         if platform.system() == "Windows":
+            username = os.environ.get("USERNAME", "Matheus")
             common_paths = [
+                # Caminho do webserver rodando
+                Path(f"C:/OpenPLC_Runtime/home/{username}/OpenPLC_v3/webserver/iec2c.exe"),
+                Path(f"C:/OpenPLC_Runtime/home/{username}/OpenPLC_v3/webserver/core/matiec/iec2c.exe"),
+                Path("C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3/webserver/iec2c.exe"),
+                Path("C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3/webserver/core/matiec/iec2c.exe"),
+                # Outros caminhos comuns
                 Path("C:/OpenPLC_v3/webserver/iec2c.exe"),
                 Path("C:/OpenPLC_v3/webserver/core/matiec/iec2c.exe"),
                 Path.home() / "OpenPLC_Editor" / "matiec" / "iec2c.exe",
@@ -159,46 +169,75 @@ class OpenPLCRunner:
         
         return None
     
+    def _check_webserver_running(self, port=8080):
+        """Verifica se o webserver do OpenPLC está rodando"""
+        try:
+            import socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex(('127.0.0.1', port))
+            sock.close()
+            return result == 0
+        except:
+            return False
+    
+    def _check_modbus_running(self, port=502):
+        """Verifica se o Modbus/TCP está respondendo (runtime ativo)"""
+        try:
+            test_client = ModbusTcpClient("127.0.0.1", port=port)
+            connect_result = test_client.connect()
+            test_client.close()
+            return connect_result is not False
+        except:
+            return False
+    
+    def _find_webserver_script(self):
+        """Procura o script webserver.py do OpenPLC"""
+        # Se temos override, usa ele
+        if self.webserver_script_override and self.webserver_script_override.exists():
+            return self.webserver_script_override
+        
+        possible_paths = [
+            self.openplc_path / "webserver" / "webserver.py",
+            self.openplc_path / "webserver.py",
+            self.openplc_path / "webserver" / "main.py",
+            self.openplc_path / "main.py",
+        ]
+        
+        # Procurar em locais comuns do Windows
+        if platform.system() == "Windows":
+            username = os.environ.get("USERNAME", "Matheus")
+            possible_paths.extend([
+                Path(f"C:/OpenPLC_Runtime/home/{username}/OpenPLC_v3/webserver/webserver.py"),
+                Path("C:/OpenPLC_Runtime/home/Matheus/OpenPLC_v3/webserver/webserver.py"),
+            ])
+        
+        for path in possible_paths:
+            if path.exists():
+                return path
+        
+        return None
+    
     def _validate_openplc_installation(self):
         """Valida se a instalação do OpenPLC tem os componentes necessários"""
-        # Se temos override, usa ele
-        if self.runtime_path_override and self.runtime_path_override.exists():
-            runtime_path = self.runtime_path_override
+        # Verifica se webserver está rodando (OpenPLC moderno)
+        webserver_running = self._check_webserver_running(8080)
+        modbus_running = self._check_modbus_running(502)
+        
+        # Procura o script webserver.py
+        webserver_script = self._find_webserver_script()
+        
+        # Se webserver está rodando, não precisa iniciar
+        if webserver_running or modbus_running:
+            print(f"[INFO] OpenPLC webserver detectado (porta 8080: {webserver_running}, Modbus 502: {modbus_running})")
+            webserver_path = webserver_script if webserver_script else "webserver_running"
         else:
-            runtime_name = "openplc_runtime.exe" if platform.system() == "Windows" else "openplc_runtime"
-            
-            # Procura runtime em vários locais
-            runtime_names_variants = [
-                runtime_name,
-                "OpenPLC_Runtime.exe" if platform.system() == "Windows" else "OpenPLC_Runtime",
-                "runtime.exe" if platform.system() == "Windows" else "runtime",
-            ]
-            
-            possible_runtime_paths = []
-            for name in runtime_names_variants:
-                possible_runtime_paths.extend([
-                    self.openplc_path / "runtime" / name,
-                    self.openplc_path / name,  # Pode estar diretamente na raiz
-                    self.openplc_path / "webserver" / name,
-                    self.openplc_path / "bin" / name,  # Algumas instalações têm bin/
-                ])
-            
-            # Procurar em locais comuns do Windows
-            if platform.system() == "Windows":
-                common_runtime_paths = [
-                    Path("C:/OpenPLC_Runtime/OpenPLC_Runtime.exe"),
-                    Path("C:/OpenPLC_Runtime/openplc_runtime.exe"),
-                    Path("C:/OpenPLC_Runtime/runtime.exe"),
-                    Path("C:/OpenPLC_Runtime/runtime/OpenPLC_Runtime.exe"),
-                    Path("C:/Program Files/OpenPLC_Runtime/OpenPLC_Runtime.exe"),
-                ]
-                possible_runtime_paths.extend(common_runtime_paths)
-            
-            runtime_path = None
-            for path in possible_runtime_paths:
-                if path.exists():
-                    runtime_path = path
-                    break
+            # Webserver não está rodando, precisa encontrar o script para iniciar
+            if webserver_script:
+                print(f"[INFO] Webserver não está rodando, mas script encontrado: {webserver_script}")
+                webserver_path = webserver_script
+            else:
+                webserver_path = None
         
         # Procura compilador
         compiler_path = self._find_compiler()
@@ -206,8 +245,8 @@ class OpenPLCRunner:
         missing = []
         if not compiler_path:
             missing.append(f"Compilador (procurado em vários locais)")
-        if not runtime_path:
-            missing.append(f"Runtime (procurado em vários locais)")
+        if not webserver_path and not (webserver_running or modbus_running):
+            missing.append(f"Webserver (webserver.py não encontrado e webserver não está rodando)")
         
         if missing:
             # Lista os caminhos que foram procurados
@@ -242,39 +281,112 @@ class OpenPLCRunner:
                     error_msg += f"  - {path}\n"
                 error_msg += "\n"
             
-            if not runtime_path:
-                error_msg += "Locais onde o RUNTIME foi procurado:\n"
-                for path in searched_runtime_paths:
+            if not webserver_path:
+                error_msg += "Locais onde o WEBSERVER foi procurado:\n"
+                searched_webserver_paths = [
+                    self.openplc_path / "webserver" / "webserver.py",
+                    self.openplc_path / "webserver.py",
+                    self.openplc_path / "webserver" / "main.py",
+                ]
+                for path in searched_webserver_paths:
                     error_msg += f"  - {path}\n"
                 error_msg += "\n"
             
             error_msg += (
-                "O OpenPLC pode ter diferentes estruturas de instalação:\n"
-                "1. OpenPLC_v3 completo (com compilador em compiler/ ou webserver/core/matiec/)\n"
-                "2. OpenPLC Runtime apenas (pode não ter compilador separado)\n"
-                "3. OpenPLC Editor (compilador pode estar integrado)\n\n"
+                "O OpenPLC moderno roda como webserver (webserver.py), não como executável.\n"
+                "Estruturas de instalação:\n"
+                "1. OpenPLC_v3 completo (webserver.py em webserver/webserver.py)\n"
+                "2. OpenPLC Runtime (webserver.py pode estar em local diferente)\n\n"
                 "Soluções:\n"
-                "1. Execute 'python find_openplc.py' para encontrar sua instalação\n"
-                "2. Instale o OpenPLC_v3 completo de: https://github.com/thiagoralves/OpenPLC_v3\n"
-                "3. Ou indique o caminho correto usando --openplc-path\n"
-                "4. Verifique se o compilador MatIEC está instalado separadamente"
+                "1. Certifique-se de que o OpenPLC webserver está instalado\n"
+                "2. Execute 'python find_openplc.py' para encontrar sua instalação\n"
+                "3. Instale o OpenPLC_v3 completo de: https://github.com/thiagoralves/OpenPLC_v3\n"
+                "4. Ou indique o caminho correto usando --openplc-path\n"
+                "5. O webserver será iniciado automaticamente se não estiver rodando\n\n"
+                "NOTA: O webserver.py é a runtime do OpenPLC. Ele será iniciado automaticamente se necessário."
             )
             
             raise FileNotFoundError(error_msg)
         
         # Armazena os caminhos encontrados
         self.compiler_path = compiler_path
-        self.runtime_path = runtime_path
+        self.webserver_script = webserver_path
+        self.webserver_running = webserver_running or modbus_running
+        self.webserver_port = 8080
+        self.webserver_url = f"http://127.0.0.1:{self.webserver_port}"
+    
+    def _upload_program_via_api(self, st_code_path):
+        """Tenta fazer upload do programa via API REST do webserver (opcional)"""
+        try:
+            import requests
+            st_content = Path(st_code_path).read_text(encoding='utf-8')
+            
+            # Tenta fazer upload via API (endpoint pode variar)
+            # OpenPLC webserver pode ter endpoint /upload ou similar
+            endpoints = [
+                f"{self.webserver_url}/upload_program",
+                f"{self.webserver_url}/api/upload",
+                f"{self.webserver_url}/program/upload",
+            ]
+            
+            for endpoint in endpoints:
+                try:
+                    response = requests.post(
+                        endpoint,
+                        files={"file": ("program.st", st_content, "text/plain")},
+                        timeout=5
+                    )
+                    if response.status_code == 200:
+                        print(f"[DEBUG] Programa enviado via API para: {endpoint}")
+                        return
+                except:
+                    continue
+            
+            # Se não conseguiu via API, continua com método local
+            print(f"[DEBUG] API de upload não disponível, usando método local")
+        except ImportError:
+            # requests não disponível, continua com método local
+            pass
+        except Exception as e:
+            # Qualquer erro, continua com método local
+            print(f"[DEBUG] Upload via API falhou: {e}, usando método local")
 
     def run_program(self, st_code_path, test_cases):
         """Executa um código ST dentro do OpenPLC e avalia"""
-        runtime = None
+        webserver_process = None
         client = None
         
         try:
             # 1. Copiar arquivo ST para pasta de compilação
-            tmp_program = self.openplc_path / "program.st"
+            # Se for webserver, pode estar em local diferente
+            if "webserver" in str(self.openplc_path).lower() or "home" in str(self.openplc_path).lower():
+                # Estrutura de webserver: tenta vários locais possíveis
+                possible_locations = [
+                    self.openplc_path / "webserver" / "program.st",
+                    self.openplc_path / "program.st",
+                    self.openplc_path / "st_files" / "program.st",
+                ]
+                tmp_program = None
+                for loc in possible_locations:
+                    if loc.parent.exists():
+                        tmp_program = loc
+                        break
+                if not tmp_program:
+                    # Cria no primeiro local possível
+                    tmp_program = possible_locations[0]
+            else:
+                tmp_program = self.openplc_path / "program.st"
+            
+            tmp_program.parent.mkdir(parents=True, exist_ok=True)
             tmp_program.write_text(Path(st_code_path).read_text(), encoding='utf-8')
+            print(f"[DEBUG] Arquivo ST copiado para: {tmp_program}")
+            
+            # Se webserver está rodando, tenta fazer upload via API (opcional)
+            if hasattr(self, 'webserver_running') and self.webserver_running:
+                try:
+                    self._upload_program_via_api(st_code_path)
+                except Exception as e:
+                    print(f"[AVISO] Falha ao fazer upload via API, usando método local: {e}")
 
             # 2. Compilar usando o compilador encontrado
             if not hasattr(self, 'compiler_path') or not self.compiler_path:
@@ -282,14 +394,90 @@ class OpenPLCRunner:
             
             print(f"[DEBUG] Usando compilador: {self.compiler_path}")
             
+            # Tenta encontrar script de compilação primeiro
+            compile_script = None
+            possible_scripts = [
+                self.openplc_path / "scripts" / "compile_program.sh",
+                self.openplc_path / "webserver" / "scripts" / "compile_program.sh",
+                self.openplc_path / "scripts" / "compile_program.bat",
+                self.openplc_path / "webserver" / "scripts" / "compile_program.bat",
+            ]
+            
+            for script_path in possible_scripts:
+                if script_path.exists():
+                    compile_script = script_path
+                    print(f"[DEBUG] Script de compilação encontrado: {compile_script}")
+                    break
+            
             # Diferentes compiladores podem ter diferentes sintaxes
-            # MatIEC (iec2c) precisa do arquivo como argumento
             compiler_name = self.compiler_path.name.lower()
-            if "iec2c" in compiler_name or "matiec" in compiler_name:
-                # MatIEC compiler
+            
+            if compile_script:
+                # Usa script de compilação se disponível
+                if compile_script.suffix == ".sh":
+                    # Script bash (pode precisar de WSL no Windows)
+                    compile_result = subprocess.run(
+                        ["bash", str(compile_script), str(tmp_program)],
+                        cwd=str(compile_script.parent),
+                        capture_output=True,
+                        text=True,
+                        check=False
+                    )
+                else:
+                    # Script batch (.bat)
+                    compile_result = subprocess.run(
+                        [str(compile_script), str(tmp_program)],
+                        cwd=str(compile_script.parent),
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                        shell=True
+                    )
+            elif "iec2c" in compiler_name or "matiec" in compiler_name:
+                # MatIEC compiler - precisa executar no diretório onde está lib/ieclib.txt
+                compiler_dir = self.compiler_path.parent
+                
+                # Procura lib/ieclib.txt em vários locais possíveis
+                lib_path = None
+                possible_lib_paths = [
+                    compiler_dir / "lib",
+                    compiler_dir.parent / "lib",
+                    compiler_dir.parent.parent / "lib",
+                    self.openplc_path / "webserver" / "core" / "matiec" / "lib",
+                    self.openplc_path / "webserver" / "lib",
+                    self.openplc_path / "lib",
+                ]
+                
+                for path in possible_lib_paths:
+                    if path.exists() and (path / "ieclib.txt").exists():
+                        lib_path = path
+                        print(f"[DEBUG] Biblioteca encontrada em: {lib_path}")
+                        break
+                
+                # Determina o diretório de trabalho para o compilador
+                # O MatIEC precisa que lib/ esteja relativo ao diretório de execução
+                if lib_path:
+                    compile_cwd = lib_path.parent
+                    print(f"[DEBUG] Compilando a partir de: {compile_cwd} (lib em: {lib_path})")
+                else:
+                    # Se não encontrou lib/, tenta usar o diretório do compilador
+                    compile_cwd = compiler_dir
+                    print(f"[AVISO] Biblioteca lib/ieclib.txt não encontrada, compilando a partir de: {compile_cwd}")
+                    print(f"[DEBUG] Locais procurados: {[str(p) for p in possible_lib_paths]}")
+                
+                # Converte o caminho do arquivo ST para relativo ao diretório de trabalho
+                try:
+                    st_file_for_compiler = tmp_program.relative_to(compile_cwd)
+                except ValueError:
+                    # Se não é relativo, usa caminho absoluto
+                    st_file_for_compiler = tmp_program
+                
+                print(f"[DEBUG] Executando: {self.compiler_path} {st_file_for_compiler}")
+                print(f"[DEBUG] Diretório de trabalho: {compile_cwd}")
+                
                 compile_result = subprocess.run(
-                    [str(self.compiler_path), str(tmp_program)],
-                    cwd=str(self.openplc_path),
+                    [str(self.compiler_path), str(st_file_for_compiler)],
+                    cwd=str(compile_cwd),
                     capture_output=True,
                     text=True,
                     check=False
@@ -312,19 +500,60 @@ class OpenPLCRunner:
                     f"STDOUT: {compile_result.stdout}"
                 )
 
-            # 3. Start runtime usando o runtime encontrado
-            if not hasattr(self, 'runtime_path') or not self.runtime_path:
-                raise FileNotFoundError("Runtime OpenPLC não foi encontrado durante a inicialização")
+            # 3. Verificar se webserver já está rodando e iniciar se necessário
+            webserver_process = None
             
-            print(f"[DEBUG] Usando runtime: {self.runtime_path}")
+            # Verifica se webserver já está rodando
+            webserver_running = self._check_webserver_running(8080)
+            modbus_running = self._check_modbus_running(502)
             
-            runtime = subprocess.Popen(
-                [str(self.runtime_path)],
-                cwd=str(self.openplc_path),
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            time.sleep(2)
+            if webserver_running or modbus_running:
+                print(f"[INFO] OpenPLC webserver já está rodando (porta 8080: {webserver_running}, Modbus 502: {modbus_running})")
+            else:
+                # Webserver não está rodando, precisa iniciar
+                if hasattr(self, 'webserver_script') and self.webserver_script:
+                    if isinstance(self.webserver_script, Path) and self.webserver_script.exists():
+                        print(f"[INFO] Iniciando OpenPLC webserver: {self.webserver_script}")
+                        
+                        # Determina o diretório de trabalho (onde está o webserver.py)
+                        webserver_dir = self.webserver_script.parent
+                        
+                        # Inicia o webserver.py
+                        webserver_process = subprocess.Popen(
+                            ["python", str(self.webserver_script)],
+                            cwd=str(webserver_dir),
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE
+                        )
+                        
+                        # Aguarda o webserver iniciar
+                        print(f"[INFO] Aguardando webserver iniciar...")
+                        max_wait = 10  # máximo 10 segundos
+                        waited = 0
+                        while waited < max_wait:
+                            time.sleep(1)
+                            waited += 1
+                            if self._check_webserver_running(8080) or self._check_modbus_running(502):
+                                print(f"[OK] Webserver iniciado com sucesso!")
+                                break
+                        
+                        if not (self._check_webserver_running(8080) or self._check_modbus_running(502)):
+                            # Verifica se o processo ainda está rodando
+                            if webserver_process.poll() is not None:
+                                stderr_output = webserver_process.stderr.read().decode('utf-8', errors='ignore')
+                                raise RuntimeError(
+                                    f"Falha ao iniciar webserver (processo terminou com código {webserver_process.returncode}):\n"
+                                    f"{stderr_output}"
+                                )
+                            else:
+                                print(f"[AVISO] Webserver iniciado, mas ainda não responde nas portas 8080/502. Continuando...")
+                    else:
+                        raise FileNotFoundError(f"Script webserver.py não encontrado: {self.webserver_script}")
+                else:
+                    raise FileNotFoundError(
+                        "Webserver não está rodando e webserver.py não foi encontrado. "
+                        "Certifique-se de que o OpenPLC está instalado corretamente."
+                    )
 
             # 4. Conectar via Modbus/TCP
             client = ModbusTcpClient("127.0.0.1", port=502)
@@ -402,12 +631,14 @@ class OpenPLCRunner:
                 except:
                     pass
             
-            if runtime:
+            # Só termina o webserver se nós o iniciamos (não estava rodando antes)
+            if webserver_process and not (webserver_running or modbus_running):
                 try:
-                    runtime.terminate()
-                    runtime.wait(timeout=5)
+                    print(f"[INFO] Encerrando processo de webserver...")
+                    webserver_process.terminate()
+                    webserver_process.wait(timeout=5)
                 except:
                     try:
-                        runtime.kill()
+                        webserver_process.kill()
                     except:
                         pass
